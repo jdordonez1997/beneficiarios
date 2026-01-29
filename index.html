@@ -12,15 +12,6 @@
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   />
-  <!-- MarkerCluster -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
-  />
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
-  />
 
   <style>
     :root {
@@ -53,7 +44,7 @@
     }
     .brand {
       display: flex;
-      flex-direction: column;   /* logo arriba, título abajo */
+      flex-direction: column;
       align-items: flex-start;
       gap: 10px;
       margin-bottom: 10px;
@@ -89,14 +80,6 @@
       background: #fff;
     }
     select:disabled{ background:#f6f6f6; color:#999; }
-    .row { display: flex; gap: 10px; }
-    .row > * { flex: 1; }
-
-    .checks {
-      display:flex; align-items:center; gap:8px;
-      font-size: 13px;
-      margin: 10px 0 2px;
-    }
 
     .btn {
       width: 100%;
@@ -107,11 +90,6 @@
       font-weight: 700;
       cursor: pointer;
       margin-top: 10px;
-    }
-    .btn.primary {
-      background: var(--btn);
-      color: var(--btnText);
-      border-color: var(--btn);
     }
 
     .stats {
@@ -182,8 +160,6 @@
     }
     .k { font-weight: 800; color: #222; }
     .v { color: #111; word-break: break-word; }
-    .v a { color: #0b57d0; text-decoration: none; }
-    .v a:hover { text-decoration: underline; }
 
     .detail-actions {
       display: flex;
@@ -270,11 +246,6 @@
         <input id="buscar" type="text" placeholder="Ej: 1710..., REATEGUI..., SUCUMBIOS..." />
       </div>
 
-      <div class="checks">
-        <input id="useCluster" type="checkbox" checked />
-        <label for="useCluster"><b>Agrupar puntos (clúster)</b></label>
-      </div>
-
       <button id="clearBtn" class="btn">Limpiar</button>
 
       <div class="stats" id="stats">
@@ -331,21 +302,18 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
   ></script>
-  <!-- MarkerCluster -->
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
   <script>
     /********************
      * CONFIG
      ********************/
-    // ✅ Cambia SOLO si tu geojson tiene otro nombre.
     const GEOJSON_FILE = "beneficiarios.geojson";
 
     // Vista inicial (Ecuador)
     const initialCenter = [-1.45, -78.35];
     const initialZoom = 6;
 
-    // Rendimiento: limita zoom máximo al hacer fitBounds
+    // FitBounds: para que no haga zoom exagerado
     const FIT_MAX_ZOOM = 13;
 
     /********************
@@ -358,19 +326,8 @@
         t = setTimeout(() => fn(...args), delay);
       };
     }
-
-    function norm(s) {
-      return (s ?? "").toString().trim();
-    }
-
-    function normUpper(s) {
-      return norm(s).toUpperCase();
-    }
-
-    function isEmptyCoord(val) {
-      const v = norm(val);
-      return v === "" || v.toUpperCase() === "S/N" || v.toUpperCase() === "NULL" || v === "0" || v === "0.000";
-    }
+    function norm(s) { return (s ?? "").toString().trim(); }
+    function normUpper(s) { return norm(s).toUpperCase(); }
 
     /********************
      * DOM
@@ -379,7 +336,6 @@
     const cantonSelect = document.getElementById("canton");
     const planSelect = document.getElementById("planificacion");
     const searchInput = document.getElementById("buscar");
-    const useClusterChk = document.getElementById("useCluster");
     const clearBtn = document.getElementById("clearBtn");
     const statsEl = document.getElementById("stats");
     const fechaEl = document.getElementById("fechaActualizacion");
@@ -394,33 +350,22 @@
     const d_plan = document.getElementById("d_plan");
     const btnCentrar = document.getElementById("btnCentrar");
     const btnQuitar = document.getElementById("btnQuitar");
-
     const legendItems = document.getElementById("legendItems");
 
     /********************
      * MAP INIT
      ********************/
-    const map = L.map("map", {
-      preferCanvas: true
-    }).setView(initialCenter, initialZoom);
+    const map = L.map("map", { preferCanvas: true }).setView(initialCenter, initialZoom);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution: "&copy; OpenStreetMap contributors"
     }).addTo(map);
 
-    // Layers
+    // Layer group (sin clúster)
     const pointsLayer = L.layerGroup().addTo(map);
-    let clusterGroup = L.markerClusterGroup({
-      chunkedLoading: true,
-      chunkInterval: 50,
-      chunkDelay: 25,
-      maxClusterRadius: 55,
-      showCoverageOnHover: false
-    });
 
-    // Selection handling (so you can click same point again)
-    let selectedMarker = null;
+    // Selection
     let selectedLatLng = null;
 
     /********************
@@ -429,7 +374,7 @@
     let geojsonData = null;
     let totalCount = 0;
 
-    // Colors automatic by PLANIFICAC
+    // Colores automáticos por PLANIFICAC
     const planColor = new Map();
     const palette = [
       "#1f77b4","#ff7f0e","#2ca02c","#d62728","#9467bd","#8c564b","#e377c2",
@@ -484,7 +429,7 @@
         selectEl.appendChild(opt);
       });
 
-      // try restore selection if still exists
+      // Restituir selección si existe
       const exists = Array.from(selectEl.options).some(o => o.value === current);
       if (exists) selectEl.value = current;
       else selectEl.selectedIndex = 0;
@@ -500,14 +445,12 @@
         const plan = norm(p.PLANIFICAC);
         if (prov) provSet.add(prov);
         if (plan) planSet.add(plan);
-        // Pre-assign colors for legend stability
-        if (plan) getColorByPlan(plan);
+        if (plan) getColorByPlan(plan); // fija colores/leyenda
       });
 
       setOptions(provinciaSelect, Array.from(provSet).sort(), "(Todas)");
       setOptions(planSelect, Array.from(planSet).sort(), "(Todos)");
 
-      // canton starts disabled until province chosen
       cantonSelect.disabled = true;
       cantonSelect.innerHTML = '<option>(Todos)</option>';
 
@@ -536,7 +479,6 @@
      * DETAIL PANEL
      ********************/
     function showDetails(props, latlng) {
-      // Only show: CI, NOMBRE, PROVINCIA, CANTON, PARROQUIA, PLANIFICAC
       d_nombre.textContent = norm(props.NOMBRE) || "—";
       d_ci.textContent = norm(props.CI) || "—";
       d_prov.textContent = norm(props.PROVINCIA) || "—";
@@ -545,13 +487,10 @@
       d_plan.textContent = norm(props.PLANIFICAC) || "—";
 
       selectedLatLng = latlng;
-
-      // show panel
       detailPanel.classList.remove("hidden");
     }
 
     function clearSelection() {
-      selectedMarker = null;
       selectedLatLng = null;
       detailPanel.classList.add("hidden");
     }
@@ -574,36 +513,33 @@
       const plan = planSelect.value;
       const q = norm(searchInput.value).toLowerCase();
 
-      // clear existing
       pointsLayer.clearLayers();
-      if (clusterGroup) clusterGroup.clearLayers();
 
       const keptMarkers = [];
-
       let shown = 0;
 
-      geojsonData.features.forEach(f => {
+      for (const f of geojsonData.features) {
         const p = f.properties || {};
         const g = f.geometry || {};
-        if (!g.coordinates || g.type !== "Point") return;
+        if (!g.coordinates || g.type !== "Point") continue;
 
         const fProv = normUpper(p.PROVINCIA);
         const fCant = normUpper(p.CANTON);
         const fPlan = norm(p.PLANIFICAC);
 
-        if (prov !== "(Todas)" && fProv !== normUpper(prov)) return;
-        if (cant !== "(Todos)" && fCant !== normUpper(cant)) return;
-        if (plan !== "(Todos)" && fPlan !== plan) return;
+        if (prov !== "(Todas)" && fProv !== normUpper(prov)) continue;
+        if (cant !== "(Todos)" && fCant !== normUpper(cant)) continue;
+        if (plan !== "(Todos)" && fPlan !== plan) continue;
 
         if (q) {
           const haystack = [
             p.CI, p.NOMBRE, p.PROVINCIA, p.CANTON, p.PARROQUIA, p.PLANIFICAC
           ].filter(Boolean).join(" ").toLowerCase();
-          if (!haystack.includes(q)) return;
+          if (!haystack.includes(q)) continue;
         }
 
         const [lng, lat] = g.coordinates;
-        if (typeof lat !== "number" || typeof lng !== "number") return;
+        if (typeof lat !== "number" || typeof lng !== "number") continue;
 
         const color = getColorByPlan(fPlan);
 
@@ -616,29 +552,14 @@
         });
 
         marker.on("click", () => {
-          // Allow re-click on previously clicked markers:
-          selectedMarker = marker;
           showDetails(p, marker.getLatLng());
         });
 
+        marker.addTo(pointsLayer);
         keptMarkers.push(marker);
         shown++;
-
-        if (useClusterChk.checked) {
-          clusterGroup.addLayer(marker);
-        } else {
-          marker.addTo(pointsLayer);
-        }
-      });
-
-      // add cluster layer if enabled
-      if (useClusterChk.checked) {
-        if (!map.hasLayer(clusterGroup)) map.addLayer(clusterGroup);
-      } else {
-        if (map.hasLayer(clusterGroup)) map.removeLayer(clusterGroup);
       }
 
-      // Update stats
       statsEl.innerHTML =
         `Total: ${totalCount.toLocaleString()}<br/>` +
         `Mostrando: ${shown.toLocaleString()}<br/>` +
@@ -647,7 +568,6 @@
         `Planificación: ${plan}<br/>` +
         `Búsqueda: ${q ? q : "(Ninguna)"}`;
 
-      // Auto-zoom
       if (!zoom) return;
 
       if (keptMarkers.length === 0) {
@@ -671,21 +591,13 @@
      ********************/
     provinciaSelect.addEventListener("change", () => {
       updateCantonOptionsForProvince(provinciaSelect.value);
-
-      // If province changed, reset canton to "(Todos)"
-      if (cantonSelect.value !== "(Todos)") cantonSelect.value = "(Todos)";
-
+      cantonSelect.value = "(Todos)";
       applyLive();
     });
 
     cantonSelect.addEventListener("change", applyLive);
     planSelect.addEventListener("change", applyLive);
     searchInput.addEventListener("input", applyLive);
-
-    useClusterChk.addEventListener("change", () => {
-      // re-render but keep zoom
-      applyFiltersAndZoom({ zoom: false });
-    });
 
     clearBtn.addEventListener("click", () => {
       provinciaSelect.value = "(Todas)";
@@ -700,12 +612,6 @@
       map.setView(initialCenter, initialZoom);
     });
 
-    // Optional: clear selection when clicking blank map
-    map.on("click", () => {
-      // Do not force-close if user wants persistent detail; you can comment out if desired.
-      // clearSelection();
-    });
-
     /********************
      * LOAD DATA
      ********************/
@@ -718,7 +624,7 @@
         geojsonData = data;
         totalCount = (geojsonData.features || []).length;
 
-        // Show update date (today)
+        // Fecha de hoy
         const now = new Date();
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth()+1).padStart(2,"0");
@@ -735,4 +641,3 @@
   </script>
 </body>
 </html>
-
