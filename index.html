@@ -1,9 +1,9 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>BENEFICIARIOS CALIFICADOS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Beneficiarios Calificados</title>
 
   <!-- Leaflet -->
   <link
@@ -12,694 +12,639 @@
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   />
-
-  <style>
-    :root{
-      --panel-w: 320px;
-      --detail-w: 360px;
-      --bg: #ffffff;
-      --ink: #111827;
-      --muted:#6b7280;
-      --border:#e5e7eb;
-      --shadow: 0 10px 25px rgba(0,0,0,.08);
-      --btn:#111827;
-      --btn2:#ffffff;
-      --radius: 14px;
-    }
-
-    html, body { height: 100%; margin: 0; font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color: var(--ink); }
-    #app { height: 100%; display: grid; grid-template-columns: var(--panel-w) 1fr var(--detail-w); }
-
-    /* Left panel */
-    #panel {
-      background: var(--bg);
-      border-right: 1px solid var(--border);
-      padding: 16px 14px;
-      overflow: auto;
-    }
-
-    .brand {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    .brand img{
-      max-width: 220px;
-      height: auto;
-      display:block;
-    }
-    .brand h1{
-      font-size: 16px;
-      margin: 0;
-      line-height: 1.2;
-      font-weight: 800;
-      letter-spacing: .2px;
-    }
-    .hint{
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.35;
-      margin: 6px 0 14px 0;
-    }
-
-    label{
-      font-size: 12px;
-      font-weight: 700;
-      display:block;
-      margin: 10px 0 6px;
-    }
-    select, input[type="text"]{
-      width: 100%;
-      padding: 10px 10px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      outline: none;
-      font-size: 13px;
-      background: #fff;
-    }
-    select:disabled { background:#f3f4f6; color:#9ca3af; }
-
-    .btn{
-      width:100%;
-      margin-top: 12px;
-      padding: 11px 12px;
-      border-radius: 12px;
-      border: 1px solid var(--btn);
-      background: var(--btn);
-      color: #fff;
-      font-weight: 800;
-      cursor:pointer;
-      font-size: 13px;
-    }
-    .btn.secondary{
-      background: var(--btn2);
-      color: var(--btn);
-    }
-
-    .stats{
-      margin-top: 14px;
-      padding: 12px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: #fafafa;
-      font-size: 12px;
-      line-height: 1.4;
-    }
-    .stats b{ font-weight: 800; }
-
-    .legend{
-      margin-top: 12px;
-      padding: 12px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: #fff;
-    }
-    .legend-title{
-      font-size: 12px;
-      font-weight: 900;
-      margin-bottom: 8px;
-    }
-    .legend-item{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      margin: 6px 0;
-      font-size: 12px;
-      color: #111827;
-    }
-    .swatch{
-      width: 14px;
-      height: 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(0,0,0,.15);
-      flex: 0 0 auto;
-    }
-    .legend-item .name{
-      flex:1 1 auto;
-      overflow:hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .legend-item .count{
-      color: var(--muted);
-      flex: 0 0 auto;
-    }
-
-    /* Map */
-    #map { height: 100%; }
-
-    /* Right detail panel */
-    #detail {
-      background: var(--bg);
-      border-left: 1px solid var(--border);
-      padding: 16px 14px;
-      overflow: auto;
-    }
-    .detail-card{
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 14px;
-      background: #fff;
-    }
-    .detail-title{
-      font-weight: 900;
-      font-size: 14px;
-      margin: 0 0 10px 0;
-      letter-spacing:.2px;
-    }
-    .kv{
-      display:grid;
-      grid-template-columns: 110px 1fr;
-      gap: 8px 10px;
-      font-size: 12px;
-      line-height: 1.35;
-    }
-    .k{ font-weight: 800; color:#111827; }
-    .v{ color:#111827; word-break: break-word; }
-    .empty{
-      font-size: 12px;
-      color: var(--muted);
-      padding: 8px 0;
-    }
-    .detail-actions{
-      display:flex;
-      gap:10px;
-      margin-top: 12px;
-    }
-    .detail-actions button{
-      flex:1 1 auto;
-      padding: 10px 10px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: #fff;
-      cursor:pointer;
-      font-weight: 800;
-      font-size: 12px;
-    }
-    .detail-actions button.primary{
-      border-color: var(--btn);
-      background: var(--btn);
-      color:#fff;
-    }
-
-    /* Responsive */
-    @media (max-width: 1100px){
-      :root{ --panel-w: 300px; --detail-w: 320px; }
-    }
-    @media (max-width: 900px){
-      #app{ grid-template-columns: 1fr; grid-template-rows: auto 60vh auto; }
-      #panel{ border-right: none; border-bottom: 1px solid var(--border); }
-      #detail{ border-left: none; border-top: 1px solid var(--border); }
-    }
-  </style>
-</head>
-
-<body>
-  <div id="app">
-    <!-- Left panel -->
-    <aside id="panel">
-      <div class="brand">
-        <img src="logo_institucional.jpg" alt="Logo institucional" />
-        <h1>BENEFICIARIOS CALIFICADOS</h1>
-      </div>
-
-      <div class="hint">
-        Filtra por provincia, cantón y planificación. Haz clic en un punto para ver el detalle a la derecha.
-      </div>
-
-      <label for="provinciaSel">Provincia</label>
-      <select id="provinciaSel">
-        <option value="">(Todas)</option>
-      </select>
-
-      <label for="cantonSel">Cantón</label>
-      <select id="cantonSel" disabled>
-        <option value="">(Todos)</option>
-      </select>
-
-      <label for="planSel">Planificación</label>
-      <select id="planSel">
-        <option value="">(Todas)</option>
-      </select>
-
-      <label for="q">Buscar (CI / nombre)</label>
-      <input id="q" type="text" placeholder="Ej: 1900..., REATEGUI..." />
-
-      <button id="applyBtn" class="btn">Aplicar filtros</button>
-      <button id="clearBtn" class="btn secondary">Limpiar</button>
-
-      <div class="stats" id="stats">
-        <div><b>Total:</b> <span id="totalN">—</span></div>
-        <div><b>Mostrando:</b> <span id="shownN">—</span></div>
-        <div><b>Provincia:</b> <span id="sProv">(Todas)</span></div>
-        <div><b>Cantón:</b> <span id="sCant">(Todos)</span></div>
-        <div><b>Planificación:</b> <span id="sPlan">(Todas)</span></div>
-      </div>
-
-      <div class="legend" id="legendBox" style="display:none;">
-        <div class="legend-title">Leyenda (PLANIFICACIÓN)</div>
-        <div id="legendItems"></div>
-      </div>
-
-      <div class="hint" style="margin-top:14px;">
-        Fuente: Base de beneficiarios calificados.<br/>
-      </div>
-    </aside>
-
-    <!-- Map -->
-    <main id="map"></main>
-
-    <!-- Right detail -->
-    <aside id="detail">
-      <div class="detail-card">
-        <div class="detail-title">DETALLE DEL BENEFICIARIO</div>
-        <div id="detailBody" class="empty">Selecciona un punto en el mapa para ver su información.</div>
-
-        <div class="detail-actions">
-          <button id="centerBtn" class="primary" disabled>Centrar</button>
-          <button id="clearSelBtn" disabled>Quitar selección</button>
-        </div>
-      </div>
-    </aside>
-  </div>
-
-  <!-- Leaflet JS -->
   <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
   ></script>
 
-  <script>
-    // ========= Config =========
-    const GEOJSON_URL = "beneficiarios.geojson";
-
-    // Columnas (según tu confirmación)
-    const F = {
-      CI: "CI",
-      NOMBRE: "NOMBRE",
-      PROV: "PROVINCIA",
-      CANT: "CANTON",
-      PARROQ: "PARROQUIA",
-      PLAN: "PLANIFICAC",
-      X: "X",
-      Y: "Y"
-    };
-
-    // Mostrar PLANIFICAC como "PLANIFICACIÓN"
-    const PLAN_LABEL = "PLANIFICACIÓN";
-
-    // ========= Helpers =========
-    function normStr(v){
-      return String(v ?? "").trim();
+  <style>
+    :root{
+      --panel-bg:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:#e5e7eb;
+      --shadow:0 10px 30px rgba(2,6,23,.10);
+      --btn:#0f172a;
+      --btnText:#ffffff;
+      --btnAlt:#ffffff;
     }
 
-    function safeUpper(v){
-      return normStr(v).toUpperCase();
+    html, body { height: 100%; margin: 0; font-family: Arial, Helvetica, sans-serif; color: var(--text); }
+    .app {
+      height: 100%;
+      display: grid;
+      grid-template-columns: 360px 1fr 360px;
+      gap: 0;
     }
 
-    // Colores automáticos: HSL espaciado por categorías
-    function colorForIndex(i, total){
-      const hue = Math.round((i * 360) / Math.max(1, total));
-      return `hsl(${hue}, 75%, 45%)`;
+    /* Left panel */
+    .panel {
+      background: var(--panel-bg);
+      border-right: 1px solid var(--border);
+      padding: 18px 18px 14px;
+      overflow: auto;
+    }
+    .brand {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .brand img{
+      width: 150px;
+      height: auto;
+      object-fit: contain;
+    }
+    h1{
+      font-size: 20px;
+      margin: 6px 0 6px;
+      letter-spacing: .2px;
+    }
+    .subtitle{
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.35;
+      margin: 0 0 14px;
+    }
+    .field { margin: 12px 0; }
+    label { display:block; font-size: 12.5px; color: var(--text); margin-bottom: 6px; font-weight: 700; }
+    select, input[type="text"]{
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+      font-size: 13px;
+      background: #fff;
+    }
+    select:disabled { background:#f8fafc; color:#9ca3af; }
+
+    .btnRow{ display:flex; gap:10px; margin: 14px 0 12px; }
+    .btn{
+      width: 100%;
+      border-radius: 12px;
+      padding: 12px 12px;
+      font-weight: 800;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      background: var(--btnAlt);
+    }
+    .btn.primary{
+      background: var(--btn);
+      color: var(--btnText);
+      border-color: #0b1220;
     }
 
-    // ========= State =========
-    let allFeatures = [];
-    let filteredFeatures = [];
-    let planValues = [];
-    let planColor = new Map(); // plan -> color
-    let selectedFeature = null;
-    let selectedLayer = null;
-
-    // ========= Map =========
-    const map = L.map("map", { preferCanvas: true }).setView([-1.5, -78.2], 6);
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-
-    const pointsLayer = L.layerGroup().addTo(map);
-
-    // ========= UI =========
-    const provinciaSel = document.getElementById("provinciaSel");
-    const cantonSel = document.getElementById("cantonSel");
-    const planSel = document.getElementById("planSel");
-    const qInput = document.getElementById("q");
-    const applyBtn = document.getElementById("applyBtn");
-    const clearBtn = document.getElementById("clearBtn");
-
-    const totalN = document.getElementById("totalN");
-    const shownN = document.getElementById("shownN");
-    const sProv = document.getElementById("sProv");
-    const sCant = document.getElementById("sCant");
-    const sPlan = document.getElementById("sPlan");
-
-    const legendBox = document.getElementById("legendBox");
-    const legendItems = document.getElementById("legendItems");
-
-    const detailBody = document.getElementById("detailBody");
-    const centerBtn = document.getElementById("centerBtn");
-    const clearSelBtn = document.getElementById("clearSelBtn");
-
-    // ========= Data load =========
-    fetch(GEOJSON_URL)
-      .then(r => {
-        if(!r.ok) throw new Error("No se pudo cargar el GeoJSON. Verifica el nombre/ubicación del archivo.");
-        return r.json();
-      })
-      .then(data => {
-        allFeatures = (data.features || []).filter(f => f && f.geometry && f.geometry.type === "Point");
-        totalN.textContent = allFeatures.length.toLocaleString("es-EC");
-
-        // Listas únicas para filtros
-        const provSet = new Set();
-        const planSet = new Set();
-
-        for(const f of allFeatures){
-          const p = safeUpper(f.properties?.[F.PROV]);
-          const pl = normStr(f.properties?.[F.PLAN]);
-          if(p) provSet.add(p);
-          if(pl) planSet.add(pl);
-        }
-
-        // Provincias
-        const provList = Array.from(provSet).sort((a,b)=>a.localeCompare(b, "es"));
-        for(const p of provList){
-          const opt = document.createElement("option");
-          opt.value = p;
-          opt.textContent = p;
-          provinciaSel.appendChild(opt);
-        }
-
-        // Planificación
-        planValues = Array.from(planSet).sort((a,b)=>a.localeCompare(b, "es"));
-        for(const pl of planValues){
-          const opt = document.createElement("option");
-          opt.value = pl;
-          opt.textContent = pl;
-          planSel.appendChild(opt);
-        }
-
-        // Colores automáticos para leyenda
-        planValues.forEach((pl, idx) => {
-          planColor.set(pl, colorForIndex(idx, planValues.length));
-        });
-
-        // Render inicial
-        filteredFeatures = allFeatures.slice();
-        rebuildCantons(); // deja cantón deshabilitado inicialmente
-        render();
-        buildLegend();
-
-      })
-      .catch(err => {
-        console.error(err);
-        alert(err.message);
-      });
-
-    // ========= Filters logic =========
-    function rebuildCantons(){
-      const selectedProv = provinciaSel.value;
-
-      // Reset
-      cantonSel.innerHTML = "";
-      const baseOpt = document.createElement("option");
-      baseOpt.value = "";
-      baseOpt.textContent = "(Todos)";
-      cantonSel.appendChild(baseOpt);
-
-      if(!selectedProv){
-        cantonSel.disabled = true;
-        return;
-      }
-
-      // Cantones de esa provincia
-      const set = new Set();
-      for(const f of allFeatures){
-        const p = safeUpper(f.properties?.[F.PROV]);
-        if(p !== selectedProv) continue;
-        const c = safeUpper(f.properties?.[F.CANT]);
-        if(c) set.add(c);
-      }
-
-      const list = Array.from(set).sort((a,b)=>a.localeCompare(b, "es"));
-      for(const c of list){
-        const opt = document.createElement("option");
-        opt.value = c;
-        opt.textContent = c;
-        cantonSel.appendChild(opt);
-      }
-      cantonSel.disabled = false;
+    .stats{
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 12.5px;
+      background: #fafafa;
+      line-height: 1.35;
+    }
+    .legend{
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+      font-size: 12.5px;
+    }
+    .legendTitle{ font-weight: 900; margin-bottom: 10px; }
+    .legItem{ display:flex; align-items:center; gap:10px; margin: 8px 0; }
+    .dot{
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,.25);
+      flex: 0 0 auto;
+    }
+    .foot{
+      margin-top: 12px;
+      font-size: 11.5px;
+      color: var(--muted);
+      line-height: 1.35;
     }
 
-    function applyFilters(){
-      const prov = provinciaSel.value;
-      const cant = cantonSel.value;
-      const plan = planSel.value;
-      const q = normStr(qInput.value).toLowerCase();
+    /* Map */
+    #map { height: 100%; width: 100%; }
 
-      filteredFeatures = allFeatures.filter(f => {
-        const props = f.properties || {};
-        const p = safeUpper(props[F.PROV]);
-        const c = safeUpper(props[F.CANT]);
-        const pl = normStr(props[F.PLAN]);
+    /* Right panel (detail) */
+    .detail {
+      background: var(--panel-bg);
+      border-left: 1px solid var(--border);
+      padding: 18px;
+      overflow: auto;
+    }
+    .card{
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+    .card h2{
+      margin: 0 0 6px;
+      font-size: 14px;
+      letter-spacing: .3px;
+    }
+    .card .hint{
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .detailName{
+      font-weight: 900;
+      font-size: 18px;
+      margin: 6px 0 10px;
+      line-height: 1.2;
+    }
+    .kv{
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 8px 10px;
+      font-size: 12.8px;
+      align-items: start;
+    }
+    .k{ font-weight: 800; color:#111827; }
+    .v{ color:#111827; word-break: break-word; }
 
-        if(prov && p !== prov) return false;
-        if(cant && c !== cant) return false;
-        if(plan && pl !== plan) return false;
+    .cardBtns{
+      display:flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .cardBtns .btn{
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 800;
+    }
+    .cardBtns .btn.primary{ flex:1; }
+    .cardBtns .btn.secondary{ flex:1; background:#fff; }
 
-        if(q){
-          const ci = normStr(props[F.CI]).toLowerCase();
-          const nom = normStr(props[F.NOMBRE]).toLowerCase();
-          if(!ci.includes(q) && !nom.includes(q)) return false;
-        }
-        return true;
-      });
-
-      // Actualiza stats
-      shownN.textContent = filteredFeatures.length.toLocaleString("es-EC");
-      sProv.textContent = prov || "(Todas)";
-      sCant.textContent = cant || "(Todos)";
-      sPlan.textContent = plan || "(Todas)";
-
-      // Si hay selección y ya no está en el filtro, limpia
-      if(selectedFeature){
-        const keep = filteredFeatures.some(ff => ff === selectedFeature);
-        if(!keep) clearSelection();
-      }
-
-      render();
-      buildLegend(true); // actualiza conteos
+    /* Leaflet controls over map */
+    .leaflet-control-zoom{
+      margin-top: 18px !important;
+      margin-left: 12px !important;
     }
 
-    function clearFilters(){
-      provinciaSel.value = "";
-      planSel.value = "";
-      qInput.value = "";
-
-      rebuildCantons();
-      cantonSel.value = "";
-
-      filteredFeatures = allFeatures.slice();
-      shownN.textContent = filteredFeatures.length.toLocaleString("es-EC");
-      sProv.textContent = "(Todas)";
-      sCant.textContent = "(Todos)";
-      sPlan.textContent = "(Todas)";
-
-      clearSelection();
-      render();
-      buildLegend(true);
+    @media (max-width: 1100px){
+      .app{ grid-template-columns: 340px 1fr; grid-template-rows: 1fr 360px; }
+      .detail{ grid-column: 1 / -1; grid-row: 2; border-left: none; border-top: 1px solid var(--border); }
     }
+  </style>
+</head>
 
-    provinciaSel.addEventListener("change", () => {
-      rebuildCantons();
-      cantonSel.value = "";
-    });
+<body>
+  <div class="app">
+    <!-- LEFT -->
+    <aside class="panel">
+      <div class="brand">
+        <img src="logo_institucional.jpg" alt="Logo institucional" />
+      </div>
+      <h1>BENEFICIARIOS CALIFICADOS</h1>
+      <p class="subtitle">
+        Filtra por provincia, cantón y planificación. Haz clic en un punto para ver el detalle a la derecha.
+      </p>
 
-    applyBtn.addEventListener("click", applyFilters);
-    clearBtn.addEventListener("click", clearFilters);
+      <div class="field">
+        <label for="provinciaSel">Provincia</label>
+        <select id="provinciaSel">
+          <option value="">(Todas)</option>
+        </select>
+      </div>
 
-    // ========= Rendering =========
-    function render(){
-      pointsLayer.clearLayers();
+      <div class="field">
+        <label for="cantonSel">Cantón</label>
+        <select id="cantonSel" disabled>
+          <option value="">(Todos)</option>
+        </select>
+      </div>
 
-      // Render con circleMarker para velocidad
-      for(const f of filteredFeatures){
-        const props = f.properties || {};
-        const pl = normStr(props[F.PLAN]);
-        const col = planColor.get(pl) || "#2563eb";
+      <div class="field">
+        <label for="planSel">Planificación</label>
+        <select id="planSel">
+          <option value="">(Todas)</option>
+        </select>
+      </div>
 
-        // Leaflet: GeoJSON coords = [lng, lat]
-        const coords = f.geometry.coordinates;
-        const lat = coords[1];
-        const lng = coords[0];
+      <div class="field">
+        <label for="searchBox">Buscar (CI / nombre)</label>
+        <input id="searchBox" type="text" placeholder="Ej: 1900..., REATEGU..." />
+      </div>
 
-        const layer = L.circleMarker([lat, lng], {
-          radius: 6,
-          weight: 1,
-          color: "rgba(0,0,0,.25)",
-          fillColor: col,
-          fillOpacity: 0.9
-        });
+      <!-- NOTA: quitamos botón aplicar filtros, pero dejamos Limpiar -->
+      <div class="btnRow">
+        <button id="clearBtn" class="btn secondary">Limpiar</button>
+      </div>
 
-        layer.on("click", () => {
-          selectFeature(f, layer);
-        });
+      <div class="stats" id="statsBox">
+        Total: <b id="totalCount">0</b><br/>
+        Mostrando: <b id="shownCount">0</b><br/>
+        Provincia: <b id="statProv">(Todas)</b><br/>
+        Cantón: <b id="statCanton">(Todos)</b><br/>
+        Planificación: <b id="statPlan">(Todas)</b><br/>
+        Búsqueda: <b id="statSearch">(Ninguna)</b>
+      </div>
 
-        pointsLayer.addLayer(layer);
-      }
+      <div class="legend" id="legendBox">
+        <div class="legendTitle">Leyenda (PLANIFICACIÓN)</div>
+        <div id="legendItems"></div>
+      </div>
 
-      shownN.textContent = filteredFeatures.length.toLocaleString("es-EC");
-      if(filteredFeatures.length && !selectedFeature){
-        // zoom suave al conjunto (opcional). Lo dejamos sin auto-zoom para evitar saltos.
-      }
-    }
+      <div class="foot">
+        Fuente: Base de beneficiarios calificados.
+      </div>
+    </aside>
 
-    // ========= Legend =========
-    function buildLegend(updateCounts=false){
-      if(planValues.length === 0){
-        legendBox.style.display = "none";
-        return;
-      }
+    <!-- MAP -->
+    <main id="map"></main>
 
-      // Conteos por plan (sobre el filtro actual)
-      const counts = new Map();
-      if(updateCounts){
-        for(const f of filteredFeatures){
-          const pl = normStr(f.properties?.[F.PLAN]);
-          if(!pl) continue;
-          counts.set(pl, (counts.get(pl) || 0) + 1);
-        }
-      }
+    <!-- RIGHT -->
+    <aside class="detail">
+      <div class="card" id="detailCard">
+        <h2>DETALLE DEL BENEFICIARIO</h2>
+        <p class="hint">Selecciona un punto en el mapa para ver su información.</p>
 
-      legendItems.innerHTML = "";
+        <div class="detailName" id="detailName">—</div>
 
-      // Muestra solo las categorías existentes; si hay filtro, igual muestra todas con conteo (si quieres, puedo hacerlo “solo presentes”)
-      for(const pl of planValues){
-        const row = document.createElement("div");
-        row.className = "legend-item";
-
-        const sw = document.createElement("span");
-        sw.className = "swatch";
-        sw.style.background = planColor.get(pl) || "#2563eb";
-
-        const name = document.createElement("span");
-        name.className = "name";
-        name.title = pl;
-        name.textContent = pl;
-
-        const cnt = document.createElement("span");
-        cnt.className = "count";
-        cnt.textContent = updateCounts ? String(counts.get(pl) || 0) : "";
-
-        row.appendChild(sw);
-        row.appendChild(name);
-        row.appendChild(cnt);
-
-        legendItems.appendChild(row);
-      }
-
-      legendBox.style.display = "block";
-    }
-
-    // ========= Detail panel (no popup) =========
-    function selectFeature(f, layer){
-      selectedFeature = f;
-      selectedLayer = layer;
-
-      // Resalta visualmente
-      // (como circleMarker, ajustamos radio/contorno)
-      layer.setStyle({
-        radius: 9,
-        weight: 2,
-        color: "rgba(0,0,0,.55)"
-      });
-
-      // Si había un seleccionado anterior, lo “desresaltamos”
-      for(const l of pointsLayer.getLayers()){
-        if(l !== layer){
-          // Reestablece estilo base
-          const props = getPropsFromLayer(l);
-          // (No tenemos props directo; así que lo dejamos sin “recalcular”. Mejor: al seleccionar, renderizamos todo de nuevo con estado seleccionado)
-        }
-      }
-      // En vez de tratar de revertir uno por uno, hacemos render() y luego re-aplicamos resaltado al actual:
-      render();
-      // Buscamos el layer correspondiente y lo resaltamos
-      // (Como re-renderiza, necesitamos encontrarlo por coordenada)
-      const coords = f.geometry.coordinates;
-      const lat = coords[1], lng = coords[0];
-      for(const l of pointsLayer.getLayers()){
-        const ll = l.getLatLng();
-        if(Math.abs(ll.lat - lat) < 1e-10 && Math.abs(ll.lng - lng) < 1e-10){
-          selectedLayer = l;
-          l.setStyle({ radius: 9, weight: 2, color: "rgba(0,0,0,.55)" });
-          break;
-        }
-      }
-
-      const p = f.properties || {};
-
-      // Solo las columnas solicitadas
-      const rows = [
-        ["CI", p[F.CI]],
-        ["NOMBRE", p[F.NOMBRE]],
-        ["PROVINCIA", p[F.PROV]],
-        ["CANTÓN", p[F.CANT]],
-        ["PARROQUIA", p[F.PARROQ]],
-        [PLAN_LABEL, p[F.PLAN]],
-      ];
-
-      detailBody.className = "";
-      detailBody.innerHTML = `
-        <div class="kv">
-          ${rows.map(([k,v]) => `
-            <div class="k">${escapeHtml(k)}:</div>
-            <div class="v">${escapeHtml(normStr(v) || "—")}</div>
-          `).join("")}
+        <div class="kv" id="detailKV" style="display:none;">
+          <div class="k">CI</div><div class="v" id="d_ci">—</div>
+          <div class="k">NOMBRE</div><div class="v" id="d_nombre">—</div>
+          <div class="k">PROVINCIA</div><div class="v" id="d_prov">—</div>
+          <div class="k">CANTÓN</div><div class="v" id="d_canton">—</div>
+          <div class="k">PARROQUIA</div><div class="v" id="d_parroq">—</div>
+          <div class="k">PLANIFICACIÓN</div><div class="v" id="d_plan">—</div>
         </div>
-      `;
 
-      centerBtn.disabled = false;
-      clearSelBtn.disabled = false;
-    }
+        <div class="cardBtns">
+          <button id="centerBtn" class="btn primary" disabled>Centar</button>
+          <button id="clearSelBtn" class="btn secondary" disabled>Quitar selección</button>
+        </div>
+      </div>
+    </aside>
+  </div>
 
-    function clearSelection(){
-      selectedFeature = null;
-      selectedLayer = null;
-      detailBody.className = "empty";
-      detailBody.textContent = "Selecciona un punto en el mapa para ver su información.";
-      centerBtn.disabled = true;
-      clearSelBtn.disabled = true;
-      render();
-    }
+<script>
+/* =========================
+   CONFIG
+========================= */
+const GEOJSON_FILE = "beneficiarios.geojson";
 
-    centerBtn.addEventListener("click", () => {
-      if(!selectedFeature) return;
-      const coords = selectedFeature.geometry.coordinates;
-      const lat = coords[1], lng = coords[0];
-      map.setView([lat, lng], Math.max(map.getZoom(), 14), { animate: true });
+// Campos EXACTOS (según tu captura)
+const FIELDS = {
+  CI: "CI",
+  NOMBRE: "NOMBRE",
+  PROV: "PROVINCIA",
+  CANTON: "CANTON",
+  PARROQ: "PARROQUIA",
+  PLAN: "PLANIFICAC"  // se muestra como PLANIFICACIÓN
+};
+
+// Colores automáticos (se asignan por categoría de PLANIFICAC)
+function hashColor(str){
+  // Genera color HSL estable (sin escoger manualmente colores)
+  let h = 0;
+  for (let i=0;i<str.length;i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  const hue = h % 360;
+  return `hsl(${hue}, 70%, 45%)`;
+}
+
+/* =========================
+   MAP INIT
+========================= */
+const map = L.map('map', { zoomSnap: 0.25, zoomDelta: 0.5 });
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; OpenStreetMap'
+}).addTo(map);
+
+let allData = null;         // GeoJSON completo
+let layerGroup = L.layerGroup().addTo(map);
+let selectedMarker = null;  // Leaflet marker
+let selectedFeature = null; // feature
+
+const provinciaSel = document.getElementById('provinciaSel');
+const cantonSel = document.getElementById('cantonSel');
+const planSel = document.getElementById('planSel');
+const searchBox = document.getElementById('searchBox');
+
+const totalCountEl = document.getElementById('totalCount');
+const shownCountEl = document.getElementById('shownCount');
+const statProvEl = document.getElementById('statProv');
+const statCantonEl = document.getElementById('statCanton');
+const statPlanEl = document.getElementById('statPlan');
+const statSearchEl = document.getElementById('statSearch');
+
+const legendItemsEl = document.getElementById('legendItems');
+
+const detailKV = document.getElementById('detailKV');
+const detailName = document.getElementById('detailName');
+const d_ci = document.getElementById('d_ci');
+const d_nombre = document.getElementById('d_nombre');
+const d_prov = document.getElementById('d_prov');
+const d_canton = document.getElementById('d_canton');
+const d_parroq = document.getElementById('d_parroq');
+const d_plan = document.getElementById('d_plan');
+
+const centerBtn = document.getElementById('centerBtn');
+const clearSelBtn = document.getElementById('clearSelBtn');
+const clearBtn = document.getElementById('clearBtn');
+
+/* =========================
+   HELPERS
+========================= */
+function norm(v){
+  return (v ?? "").toString().trim();
+}
+
+function getUniqueValues(features, field){
+  const set = new Set();
+  for (const f of features){
+    const v = norm(f.properties?.[field]);
+    if (v) set.add(v);
+  }
+  return Array.from(set).sort((a,b)=>a.localeCompare(b, 'es'));
+}
+
+function buildLegend(planValues){
+  legendItemsEl.innerHTML = "";
+  planValues.forEach(v=>{
+    const row = document.createElement('div');
+    row.className = "legItem";
+    const dot = document.createElement('span');
+    dot.className = "dot";
+    dot.style.background = hashColor(v);
+    const txt = document.createElement('span');
+    txt.textContent = v;
+    row.appendChild(dot);
+    row.appendChild(txt);
+    legendItemsEl.appendChild(row);
+  });
+}
+
+function updateStats(total, shown){
+  totalCountEl.textContent = total;
+  shownCountEl.textContent = shown;
+  statProvEl.textContent = provinciaSel.value ? provinciaSel.value : "(Todas)";
+  statCantonEl.textContent = cantonSel.value ? cantonSel.value : "(Todos)";
+  statPlanEl.textContent = planSel.value ? planSel.value : "(Todas)";
+  statSearchEl.textContent = searchBox.value.trim() ? searchBox.value.trim() : "(Ninguna)";
+}
+
+function clearSelection(){
+  selectedMarker = null;
+  selectedFeature = null;
+  detailKV.style.display = "none";
+  detailName.textContent = "—";
+  centerBtn.disabled = true;
+  clearSelBtn.disabled = true;
+}
+
+function setDetail(feature, marker){
+  selectedMarker = marker;
+  selectedFeature = feature;
+
+  const p = feature.properties || {};
+
+  const ci = norm(p[FIELDS.CI]);
+  const nombre = norm(p[FIELDS.NOMBRE]);
+  const prov = norm(p[FIELDS.PROV]);
+  const canton = norm(p[FIELDS.CANTON]);
+  const parroq = norm(p[FIELDS.PARROQ]);
+  const plan = norm(p[FIELDS.PLAN]);
+
+  detailName.textContent = nombre || "(Sin nombre)";
+  d_ci.textContent = ci || "—";
+  d_nombre.textContent = nombre || "—";
+  d_prov.textContent = prov || "—";
+  d_canton.textContent = canton || "—";
+  d_parroq.textContent = parroq || "—";
+  d_plan.textContent = plan || "—";
+
+  detailKV.style.display = "grid";
+  centerBtn.disabled = false;
+  clearSelBtn.disabled = false;
+}
+
+function makeMarker(feature, latlng){
+  const plan = norm(feature.properties?.[FIELDS.PLAN]) || "SIN PLANIFICACIÓN";
+  const color = hashColor(plan);
+
+  return L.circleMarker(latlng, {
+    radius: 6,
+    weight: 1,
+    color: "rgba(0,0,0,.35)",
+    fillColor: color,
+    fillOpacity: 0.9
+  });
+}
+
+/* =========================
+   FILTERING (AUTO)
+========================= */
+function currentFilters(){
+  return {
+    prov: provinciaSel.value,
+    canton: cantonSel.value,
+    plan: planSel.value,
+    q: searchBox.value.trim().toLowerCase()
+  };
+}
+
+function featureMatches(f, filters){
+  const p = f.properties || {};
+  const prov = norm(p[FIELDS.PROV]);
+  const canton = norm(p[FIELDS.CANTON]);
+  const plan = norm(p[FIELDS.PLAN]);
+  const ci = norm(p[FIELDS.CI]).toLowerCase();
+  const nombre = norm(p[FIELDS.NOMBRE]).toLowerCase();
+
+  if (filters.prov && prov !== filters.prov) return false;
+  if (filters.canton && canton !== filters.canton) return false;
+  if (filters.plan && plan !== filters.plan) return false;
+
+  if (filters.q){
+    const hay = (ci.includes(filters.q) || nombre.includes(filters.q));
+    if (!hay) return false;
+  }
+  return true;
+}
+
+function applyFiltersAndRender({ doZoom = true } = {}){
+  if (!allData) return;
+
+  const filters = currentFilters();
+
+  // Filtrar features
+  const filtered = allData.features.filter(f => featureMatches(f, filters));
+
+  // Render
+  layerGroup.clearLayers();
+  clearSelection(); // al cambiar filtros, limpiamos selección para evitar inconsistencias
+
+  const bounds = L.latLngBounds([]);
+  filtered.forEach(f=>{
+    const coords = f.geometry?.coordinates;
+    if (!coords || coords.length < 2) return;
+
+    const lng = coords[0], lat = coords[1];
+    if (!isFinite(lat) || !isFinite(lng)) return;
+
+    const m = makeMarker(f, [lat, lng]);
+    m.on('click', () => setDetail(f, m));
+    m.addTo(layerGroup);
+
+    bounds.extend([lat, lng]);
+  });
+
+  updateStats(allData.features.length, filtered.length);
+
+  // Zoom automático al resultado
+  if (doZoom && filtered.length > 0 && bounds.isValid()){
+    map.fitBounds(bounds, {
+      paddingTopLeft: [380, 40],   // panel izquierdo
+      paddingBottomRight: [380, 40],// panel derecho
+      maxZoom: 14
     });
+  }
 
-    clearSelBtn.addEventListener("click", clearSelection);
+  // si no hay filtrados, dejamos el zoom como estaba
+}
 
-    // ========= Utils =========
-    function escapeHtml(str){
-      return String(str)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+function refreshCantonOptions(){
+  if (!allData) return;
+
+  const prov = provinciaSel.value;
+  const features = allData.features;
+
+  // Si no hay provincia, cantón se deshabilita y se limpia
+  if (!prov){
+    cantonSel.innerHTML = '<option value="">(Todos)</option>';
+    cantonSel.value = "";
+    cantonSel.disabled = true;
+    return;
+  }
+
+  // Cantones disponibles para esa provincia (sin considerar plan/busqueda)
+  const cantones = getUniqueValues(
+    features.filter(f => norm(f.properties?.[FIELDS.PROV]) === prov),
+    FIELDS.CANTON
+  );
+
+  cantonSel.disabled = false;
+  cantonSel.innerHTML = '<option value="">(Todos)</option>' +
+    cantones.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+
+  // si el cantón actual ya no existe, lo limpia
+  const current = cantonSel.value;
+  if (current && !cantones.includes(current)){
+    cantonSel.value = "";
+  }
+}
+
+// Escape HTML para opciones
+function escapeHtml(str){
+  return str.replace(/[&<>"']/g, m => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+  }[m]));
+}
+
+/* =========================
+   EVENTS (AUTO-FILTER)
+========================= */
+let searchTimer = null;
+
+provinciaSel.addEventListener('change', () => {
+  refreshCantonOptions();
+  // Auto-filtra al cambiar provincia
+  applyFiltersAndRender({ doZoom: true });
+});
+
+cantonSel.addEventListener('change', () => {
+  applyFiltersAndRender({ doZoom: true });
+});
+
+planSel.addEventListener('change', () => {
+  applyFiltersAndRender({ doZoom: true });
+});
+
+searchBox.addEventListener('input', () => {
+  // pequeño debounce para no recalcular cada tecla demasiado agresivo
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    applyFiltersAndRender({ doZoom: true });
+  }, 180);
+});
+
+clearBtn.addEventListener('click', () => {
+  provinciaSel.value = "";
+  planSel.value = "";
+  searchBox.value = "";
+  cantonSel.value = "";
+  cantonSel.innerHTML = '<option value="">(Todos)</option>';
+  cantonSel.disabled = true;
+
+  applyFiltersAndRender({ doZoom: true });
+  clearSelection();
+});
+
+centerBtn.addEventListener('click', () => {
+  if (!selectedMarker) return;
+  const ll = selectedMarker.getLatLng();
+  map.setView(ll, Math.max(map.getZoom(), 14), { animate: true });
+});
+
+clearSelBtn.addEventListener('click', () => {
+  clearSelection();
+});
+
+/* =========================
+   LOAD DATA
+========================= */
+fetch(GEOJSON_FILE)
+  .then(r => {
+    if (!r.ok) throw new Error("No se pudo cargar el GeoJSON");
+    return r.json();
+  })
+  .then(geo => {
+    allData = geo;
+
+    // Totales
+    updateStats(allData.features.length, allData.features.length);
+
+    // Poblar selects
+    const provincias = getUniqueValues(allData.features, FIELDS.PROV);
+    provinciaSel.innerHTML = '<option value="">(Todas)</option>' +
+      provincias.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("");
+
+    const plans = getUniqueValues(allData.features, FIELDS.PLAN);
+    planSel.innerHTML = '<option value="">(Todas)</option>' +
+      plans.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("");
+
+    buildLegend(plans);
+
+    // Render inicial + zoom al total
+    applyFiltersAndRender({ doZoom: true });
+
+    // Si por alguna razón quedó sin bounds (datos malos), centra Ecuador aprox.
+    if (!map.getCenter() || !isFinite(map.getCenter().lat)){
+      map.setView([-1.5, -78.5], 6);
     }
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Error cargando el GeoJSON. Verifica que 'beneficiarios.geojson' esté en la misma carpeta que index.html.");
+    map.setView([-1.5, -78.5], 6);
+  });
 
-    // Placeholder (no usamos en esta versión)
-    function getPropsFromLayer(){ return null; }
-  </script>
+</script>
 </body>
 </html>
+
+
