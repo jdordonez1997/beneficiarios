@@ -51,11 +51,11 @@
       gap: 12px;
       margin-bottom: 10px;
     }
-    .brand img{
-      width: 150px;
-      height: auto;
-      object-fit: contain;
-    }
+.brand img{
+  width: 190px;   /* prueba 180–220 según te guste */
+  height: auto;
+  object-fit: contain;
+}
     h1{
       font-size: 20px;
       margin: 6px 0 6px;
@@ -305,13 +305,15 @@ const FIELDS = {
   PLAN: "PLANIFICAC"  // se muestra como PLANIFICACIÓN
 };
 
-// Colores automáticos (se asignan por categoría de PLANIFICAC)
+const PLAN_COLORS = {
+  "200 BID": "#e11d48",           // rojo
+  "365 POR DEFINIR": "#f59e0b",   // naranja
+  "613 BIRF": "#2563eb",          // azul fuerte
+  "633 PRE FABRICADAS": "#16a34a" // verde
+};
+
 function hashColor(str){
-  // Genera color HSL estable (sin escoger manualmente colores)
-  let h = 0;
-  for (let i=0;i<str.length;i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
-  const hue = h % 360;
-  return `hsl(${hue}, 70%, 45%)`;
+  return PLAN_COLORS[str] || "#64748b"; // gris por defecto
 }
 
 /* =========================
@@ -646,5 +648,6 @@ fetch(GEOJSON_FILE)
 </script>
 </body>
 </html>
+
 
 
