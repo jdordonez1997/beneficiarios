@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>BENEFICIARIOS CALIFICADOS</title>
+  <title>Geovisor Beneficiarios</title>
 
   <!-- Leaflet -->
   <link
@@ -12,694 +12,727 @@
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   />
+  <!-- MarkerCluster -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+  />
 
   <style>
-    :root{
-      --panel-w: 320px;
-      --detail-w: 360px;
-      --bg: #ffffff;
-      --ink: #111827;
-      --muted:#6b7280;
-      --border:#e5e7eb;
-      --shadow: 0 10px 25px rgba(0,0,0,.08);
-      --btn:#111827;
-      --btn2:#ffffff;
+    :root {
+      --panel-w: 360px;
+      --gap: 12px;
+      --border: #e6e6e6;
+      --text: #111;
+      --muted: #666;
+      --bg: #fff;
+      --card: #fff;
+      --shadow: 0 6px 20px rgba(0,0,0,.08);
       --radius: 14px;
+      --btn: #111;
+      --btnText: #fff;
     }
 
-    html, body { height: 100%; margin: 0; font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color: var(--ink); }
-    #app { height: 100%; display: grid; grid-template-columns: var(--panel-w) 1fr var(--detail-w); }
+    html, body { height: 100%; margin: 0; font-family: Arial, Helvetica, sans-serif; color: var(--text); }
+    #app { height: 100%; display: flex; }
 
     /* Left panel */
-    #panel {
-      background: var(--bg);
+    #leftPanel {
+      width: var(--panel-w);
+      min-width: 300px;
+      max-width: 420px;
+      padding: 14px 14px 12px;
       border-right: 1px solid var(--border);
-      padding: 16px 14px;
+      background: var(--bg);
+      box-sizing: border-box;
       overflow: auto;
     }
-
     .brand {
       display: flex;
-      flex-direction: column;
+      flex-direction: column;   /* logo arriba, título abajo */
       align-items: flex-start;
       gap: 10px;
       margin-bottom: 10px;
     }
-    .brand img{
-      max-width: 220px;
+    .brand img {
+      max-width: 210px;
       height: auto;
-      display:block;
+      display: block;
     }
-    .brand h1{
-      font-size: 16px;
-      margin: 0;
-      line-height: 1.2;
+    .title {
       font-weight: 800;
+      font-size: 16px;
       letter-spacing: .2px;
+      line-height: 1.2;
     }
-    .hint{
+    .subtitle {
       font-size: 12px;
       color: var(--muted);
       line-height: 1.35;
-      margin: 6px 0 14px 0;
+      margin: 0 0 10px 0;
     }
 
-    label{
-      font-size: 12px;
-      font-weight: 700;
-      display:block;
-      margin: 10px 0 6px;
-    }
+    .field { margin: 10px 0; }
+    .label { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
     select, input[type="text"]{
       width: 100%;
       padding: 10px 10px;
       border: 1px solid var(--border);
       border-radius: 10px;
-      outline: none;
       font-size: 13px;
+      outline: none;
+      box-sizing: border-box;
       background: #fff;
     }
-    select:disabled { background:#f3f4f6; color:#9ca3af; }
+    select:disabled{ background:#f6f6f6; color:#999; }
+    .row { display: flex; gap: 10px; }
+    .row > * { flex: 1; }
 
-    .btn{
-      width:100%;
-      margin-top: 12px;
-      padding: 11px 12px;
-      border-radius: 12px;
-      border: 1px solid var(--btn);
-      background: var(--btn);
-      color: #fff;
-      font-weight: 800;
-      cursor:pointer;
+    .checks {
+      display:flex; align-items:center; gap:8px;
       font-size: 13px;
-    }
-    .btn.secondary{
-      background: var(--btn2);
-      color: var(--btn);
+      margin: 10px 0 2px;
     }
 
-    .stats{
-      margin-top: 14px;
-      padding: 12px;
+    .btn {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .btn.primary {
+      background: var(--btn);
+      color: var(--btnText);
+      border-color: var(--btn);
+    }
+
+    .stats {
+      margin-top: 12px;
+      padding: 10px 12px;
       border: 1px solid var(--border);
       border-radius: 12px;
       background: #fafafa;
       font-size: 12px;
-      line-height: 1.4;
+      line-height: 1.45;
     }
-    .stats b{ font-weight: 800; }
 
-    .legend{
-      margin-top: 12px;
-      padding: 12px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: #fff;
-    }
-    .legend-title{
-      font-size: 12px;
-      font-weight: 900;
-      margin-bottom: 8px;
-    }
-    .legend-item{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      margin: 6px 0;
-      font-size: 12px;
-      color: #111827;
-    }
-    .swatch{
-      width: 14px;
-      height: 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(0,0,0,.15);
-      flex: 0 0 auto;
-    }
-    .legend-item .name{
-      flex:1 1 auto;
-      overflow:hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .legend-item .count{
+    .footnote {
+      margin-top: 10px;
+      font-size: 11px;
       color: var(--muted);
-      flex: 0 0 auto;
+      line-height: 1.35;
     }
 
-    /* Map */
-    #map { height: 100%; }
+    /* Map area */
+    #mapWrap { flex: 1; position: relative; }
+    #map { height: 100%; width: 100%; }
 
-    /* Right detail panel */
-    #detail {
-      background: var(--bg);
-      border-left: 1px solid var(--border);
-      padding: 16px 14px;
-      overflow: auto;
-    }
-    .detail-card{
+    /* Right details panel */
+    #detailPanel {
+      position: absolute;
+      right: var(--gap);
+      top: var(--gap);
+      width: 360px;
+      max-width: calc(100% - 2*var(--gap));
+      background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 14px;
+      padding: 12px;
+      box-sizing: border-box;
+      z-index: 900;
+    }
+    #detailPanel.hidden { display: none; }
+
+    .detail-title {
+      font-weight: 900;
+      font-size: 16px;
+      margin: 4px 0 10px;
+      letter-spacing: .2px;
+    }
+
+    .detail-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
       background: #fff;
     }
-    .detail-title{
+
+    .detail-name {
       font-weight: 900;
-      font-size: 14px;
-      margin: 0 0 10px 0;
-      letter-spacing:.2px;
+      font-size: 16px;
+      margin: 0 0 10px;
+      text-transform: uppercase;
     }
-    .kv{
-      display:grid;
-      grid-template-columns: 110px 1fr;
+
+    .kv {
+      display: grid;
+      grid-template-columns: 120px 1fr;
       gap: 8px 10px;
-      font-size: 12px;
-      line-height: 1.35;
+      font-size: 13px;
+      align-items: start;
     }
-    .k{ font-weight: 800; color:#111827; }
-    .v{ color:#111827; word-break: break-word; }
-    .empty{
-      font-size: 12px;
-      color: var(--muted);
-      padding: 8px 0;
-    }
-    .detail-actions{
-      display:flex;
-      gap:10px;
+    .k { font-weight: 800; color: #222; }
+    .v { color: #111; word-break: break-word; }
+    .v a { color: #0b57d0; text-decoration: none; }
+    .v a:hover { text-decoration: underline; }
+
+    .detail-actions {
+      display: flex;
+      gap: 10px;
       margin-top: 12px;
     }
     .detail-actions button{
-      flex:1 1 auto;
-      padding: 10px 10px;
+      flex: 1;
+      padding: 10px 12px;
       border-radius: 12px;
       border: 1px solid var(--border);
       background: #fff;
-      cursor:pointer;
       font-weight: 800;
-      font-size: 12px;
-    }
-    .detail-actions button.primary{
-      border-color: var(--btn);
-      background: var(--btn);
-      color:#fff;
+      cursor: pointer;
     }
 
-    /* Responsive */
-    @media (max-width: 1100px){
-      :root{ --panel-w: 300px; --detail-w: 320px; }
+    /* Legend */
+    #legend {
+      position: absolute;
+      left: var(--gap);
+      bottom: var(--gap);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
+      z-index: 900;
+      max-width: 280px;
     }
-    @media (max-width: 900px){
-      #app{ grid-template-columns: 1fr; grid-template-rows: auto 60vh auto; }
-      #panel{ border-right: none; border-bottom: 1px solid var(--border); }
-      #detail{ border-left: none; border-top: 1px solid var(--border); }
+    #legend .lg-title { font-weight: 900; font-size: 12px; margin-bottom: 8px; }
+    .lg-item { display:flex; align-items:center; gap:8px; font-size: 12px; margin: 6px 0; }
+    .swatch { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); }
+
+    @media (max-width: 900px) {
+      #leftPanel { width: 320px; }
+      #detailPanel { width: 320px; }
+    }
+    @media (max-width: 720px) {
+      #app { flex-direction: column; }
+      #leftPanel { width: 100%; max-width: none; border-right: none; border-bottom: 1px solid var(--border); }
+      #detailPanel { position: static; width: 100%; max-width: none; margin: 10px; }
+      #legend { left: 10px; bottom: 10px; }
+      #mapWrap { height: calc(100vh - 380px); }
     }
   </style>
 </head>
 
 <body>
   <div id="app">
-    <!-- Left panel -->
-    <aside id="panel">
+    <!-- LEFT PANEL -->
+    <aside id="leftPanel">
       <div class="brand">
         <img src="logo_institucional.jpg" alt="Logo institucional" />
-        <h1>BENEFICIARIOS CALIFICADOS</h1>
+        <div class="title">PROYECTOS DE VIVIENDA MITI - MITI</div>
       </div>
 
-      <div class="hint">
-        Filtra por provincia, cantón y planificación. Haz clic en un punto para ver el detalle a la derecha.
+      <p class="subtitle">
+        Filtra por provincia, cantón y planificación. La búsqueda aplica automáticamente mientras escribes.
+      </p>
+
+      <div class="field">
+        <div class="label">Provincia</div>
+        <select id="provincia">
+          <option>(Todas)</option>
+        </select>
       </div>
 
-      <label for="provinciaSel">Provincia</label>
-      <select id="provinciaSel">
-        <option value="">(Todas)</option>
-      </select>
+      <div class="field">
+        <div class="label">Cantón</div>
+        <select id="canton" disabled>
+          <option>(Todos)</option>
+        </select>
+      </div>
 
-      <label for="cantonSel">Cantón</label>
-      <select id="cantonSel" disabled>
-        <option value="">(Todos)</option>
-      </select>
+      <div class="field">
+        <div class="label">PLANIFICACIÓN</div>
+        <select id="planificacion">
+          <option>(Todos)</option>
+        </select>
+      </div>
 
-      <label for="planSel">Planificación</label>
-      <select id="planSel">
-        <option value="">(Todas)</option>
-      </select>
+      <div class="field">
+        <div class="label">Buscar (CI / nombre / provincia / cantón)</div>
+        <input id="buscar" type="text" placeholder="Ej: 1710..., REATEGUI..., SUCUMBIOS..." />
+      </div>
 
-      <label for="q">Buscar (CI / nombre)</label>
-      <input id="q" type="text" placeholder="Ej: 1900..., REATEGUI..." />
+      <div class="checks">
+        <input id="useCluster" type="checkbox" checked />
+        <label for="useCluster"><b>Agrupar puntos (clúster)</b></label>
+      </div>
 
-      <button id="applyBtn" class="btn">Aplicar filtros</button>
-      <button id="clearBtn" class="btn secondary">Limpiar</button>
+      <button id="clearBtn" class="btn">Limpiar</button>
 
       <div class="stats" id="stats">
-        <div><b>Total:</b> <span id="totalN">—</span></div>
-        <div><b>Mostrando:</b> <span id="shownN">—</span></div>
-        <div><b>Provincia:</b> <span id="sProv">(Todas)</span></div>
-        <div><b>Cantón:</b> <span id="sCant">(Todos)</span></div>
-        <div><b>Planificación:</b> <span id="sPlan">(Todas)</span></div>
+        Total: —<br/>
+        Mostrando: —<br/>
+        Provincia: —<br/>
+        Cantón: —<br/>
+        Planificación: —<br/>
+        Búsqueda: —
       </div>
 
-      <div class="legend" id="legendBox" style="display:none;">
-        <div class="legend-title">Leyenda (PLANIFICACIÓN)</div>
-        <div id="legendItems"></div>
-      </div>
-
-      <div class="hint" style="margin-top:14px;">
-        Fuente: Base de beneficiarios calificados.<br/>
+      <div class="footnote" id="footnote">
+        Fuente: Registro de beneficiarios.<br/>
+        Actualización: <span id="fechaActualizacion">—</span>
       </div>
     </aside>
 
-    <!-- Map -->
-    <main id="map"></main>
+    <!-- MAP -->
+    <main id="mapWrap">
+      <div id="map"></div>
 
-    <!-- Right detail -->
-    <aside id="detail">
-      <div class="detail-card">
+      <!-- RIGHT DETAILS (no popup) -->
+      <section id="detailPanel" class="hidden" aria-live="polite">
         <div class="detail-title">DETALLE DEL BENEFICIARIO</div>
-        <div id="detailBody" class="empty">Selecciona un punto en el mapa para ver su información.</div>
+        <div class="detail-card">
+          <div class="detail-name" id="d_nombre">—</div>
 
-        <div class="detail-actions">
-          <button id="centerBtn" class="primary" disabled>Centrar</button>
-          <button id="clearSelBtn" disabled>Quitar selección</button>
+          <div class="kv">
+            <div class="k">CI:</div><div class="v" id="d_ci">—</div>
+            <div class="k">Provincia:</div><div class="v" id="d_prov">—</div>
+            <div class="k">Cantón:</div><div class="v" id="d_cant">—</div>
+            <div class="k">Parroquia:</div><div class="v" id="d_parr">—</div>
+            <div class="k">PLANIFICACIÓN:</div><div class="v" id="d_plan">—</div>
+          </div>
+
+          <div class="detail-actions">
+            <button id="btnCentrar">Centrar</button>
+            <button id="btnQuitar">Quitar selección</button>
+          </div>
         </div>
-      </div>
-    </aside>
+      </section>
+
+      <!-- LEGEND -->
+      <section id="legend">
+        <div class="lg-title">Leyenda (PLANIFICACIÓN)</div>
+        <div id="legendItems"></div>
+      </section>
+    </main>
   </div>
 
-  <!-- Leaflet JS -->
+  <!-- Leaflet -->
   <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
   ></script>
+  <!-- MarkerCluster -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
   <script>
-    // ========= Config =========
-    const GEOJSON_URL = "beneficiarios.geojson";
+    /********************
+     * CONFIG
+     ********************/
+    // ✅ Cambia SOLO si tu geojson tiene otro nombre.
+    const GEOJSON_FILE = "beneficiarios.geojson";
 
-    // Columnas (según tu confirmación)
-    const F = {
-      CI: "CI",
-      NOMBRE: "NOMBRE",
-      PROV: "PROVINCIA",
-      CANT: "CANTON",
-      PARROQ: "PARROQUIA",
-      PLAN: "PLANIFICAC",
-      X: "X",
-      Y: "Y"
-    };
+    // Vista inicial (Ecuador)
+    const initialCenter = [-1.45, -78.35];
+    const initialZoom = 6;
 
-    // Mostrar PLANIFICAC como "PLANIFICACIÓN"
-    const PLAN_LABEL = "PLANIFICACIÓN";
+    // Rendimiento: limita zoom máximo al hacer fitBounds
+    const FIT_MAX_ZOOM = 13;
 
-    // ========= Helpers =========
-    function normStr(v){
-      return String(v ?? "").trim();
+    /********************
+     * HELPERS
+     ********************/
+    function debounce(fn, delay = 250) {
+      let t = null;
+      return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), delay);
+      };
     }
 
-    function safeUpper(v){
-      return normStr(v).toUpperCase();
+    function norm(s) {
+      return (s ?? "").toString().trim();
     }
 
-    // Colores automáticos: HSL espaciado por categorías
-    function colorForIndex(i, total){
-      const hue = Math.round((i * 360) / Math.max(1, total));
-      return `hsl(${hue}, 75%, 45%)`;
+    function normUpper(s) {
+      return norm(s).toUpperCase();
     }
 
-    // ========= State =========
-    let allFeatures = [];
-    let filteredFeatures = [];
-    let planValues = [];
-    let planColor = new Map(); // plan -> color
-    let selectedFeature = null;
-    let selectedLayer = null;
+    function isEmptyCoord(val) {
+      const v = norm(val);
+      return v === "" || v.toUpperCase() === "S/N" || v.toUpperCase() === "NULL" || v === "0" || v === "0.000";
+    }
 
-    // ========= Map =========
-    const map = L.map("map", { preferCanvas: true }).setView([-1.5, -78.2], 6);
+    /********************
+     * DOM
+     ********************/
+    const provinciaSelect = document.getElementById("provincia");
+    const cantonSelect = document.getElementById("canton");
+    const planSelect = document.getElementById("planificacion");
+    const searchInput = document.getElementById("buscar");
+    const useClusterChk = document.getElementById("useCluster");
+    const clearBtn = document.getElementById("clearBtn");
+    const statsEl = document.getElementById("stats");
+    const fechaEl = document.getElementById("fechaActualizacion");
+
+    // Detail panel fields
+    const detailPanel = document.getElementById("detailPanel");
+    const d_nombre = document.getElementById("d_nombre");
+    const d_ci = document.getElementById("d_ci");
+    const d_prov = document.getElementById("d_prov");
+    const d_cant = document.getElementById("d_cant");
+    const d_parr = document.getElementById("d_parr");
+    const d_plan = document.getElementById("d_plan");
+    const btnCentrar = document.getElementById("btnCentrar");
+    const btnQuitar = document.getElementById("btnQuitar");
+
+    const legendItems = document.getElementById("legendItems");
+
+    /********************
+     * MAP INIT
+     ********************/
+    const map = L.map("map", {
+      preferCanvas: true
+    }).setView(initialCenter, initialZoom);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
-      attribution: '&copy; OpenStreetMap'
+      attribution: "&copy; OpenStreetMap contributors"
     }).addTo(map);
 
+    // Layers
     const pointsLayer = L.layerGroup().addTo(map);
-
-    // ========= UI =========
-    const provinciaSel = document.getElementById("provinciaSel");
-    const cantonSel = document.getElementById("cantonSel");
-    const planSel = document.getElementById("planSel");
-    const qInput = document.getElementById("q");
-    const applyBtn = document.getElementById("applyBtn");
-    const clearBtn = document.getElementById("clearBtn");
-
-    const totalN = document.getElementById("totalN");
-    const shownN = document.getElementById("shownN");
-    const sProv = document.getElementById("sProv");
-    const sCant = document.getElementById("sCant");
-    const sPlan = document.getElementById("sPlan");
-
-    const legendBox = document.getElementById("legendBox");
-    const legendItems = document.getElementById("legendItems");
-
-    const detailBody = document.getElementById("detailBody");
-    const centerBtn = document.getElementById("centerBtn");
-    const clearSelBtn = document.getElementById("clearSelBtn");
-
-    // ========= Data load =========
-    fetch(GEOJSON_URL)
-      .then(r => {
-        if(!r.ok) throw new Error("No se pudo cargar el GeoJSON. Verifica el nombre/ubicación del archivo.");
-        return r.json();
-      })
-      .then(data => {
-        allFeatures = (data.features || []).filter(f => f && f.geometry && f.geometry.type === "Point");
-        totalN.textContent = allFeatures.length.toLocaleString("es-EC");
-
-        // Listas únicas para filtros
-        const provSet = new Set();
-        const planSet = new Set();
-
-        for(const f of allFeatures){
-          const p = safeUpper(f.properties?.[F.PROV]);
-          const pl = normStr(f.properties?.[F.PLAN]);
-          if(p) provSet.add(p);
-          if(pl) planSet.add(pl);
-        }
-
-        // Provincias
-        const provList = Array.from(provSet).sort((a,b)=>a.localeCompare(b, "es"));
-        for(const p of provList){
-          const opt = document.createElement("option");
-          opt.value = p;
-          opt.textContent = p;
-          provinciaSel.appendChild(opt);
-        }
-
-        // Planificación
-        planValues = Array.from(planSet).sort((a,b)=>a.localeCompare(b, "es"));
-        for(const pl of planValues){
-          const opt = document.createElement("option");
-          opt.value = pl;
-          opt.textContent = pl;
-          planSel.appendChild(opt);
-        }
-
-        // Colores automáticos para leyenda
-        planValues.forEach((pl, idx) => {
-          planColor.set(pl, colorForIndex(idx, planValues.length));
-        });
-
-        // Render inicial
-        filteredFeatures = allFeatures.slice();
-        rebuildCantons(); // deja cantón deshabilitado inicialmente
-        render();
-        buildLegend();
-
-      })
-      .catch(err => {
-        console.error(err);
-        alert(err.message);
-      });
-
-    // ========= Filters logic =========
-    function rebuildCantons(){
-      const selectedProv = provinciaSel.value;
-
-      // Reset
-      cantonSel.innerHTML = "";
-      const baseOpt = document.createElement("option");
-      baseOpt.value = "";
-      baseOpt.textContent = "(Todos)";
-      cantonSel.appendChild(baseOpt);
-
-      if(!selectedProv){
-        cantonSel.disabled = true;
-        return;
-      }
-
-      // Cantones de esa provincia
-      const set = new Set();
-      for(const f of allFeatures){
-        const p = safeUpper(f.properties?.[F.PROV]);
-        if(p !== selectedProv) continue;
-        const c = safeUpper(f.properties?.[F.CANT]);
-        if(c) set.add(c);
-      }
-
-      const list = Array.from(set).sort((a,b)=>a.localeCompare(b, "es"));
-      for(const c of list){
-        const opt = document.createElement("option");
-        opt.value = c;
-        opt.textContent = c;
-        cantonSel.appendChild(opt);
-      }
-      cantonSel.disabled = false;
-    }
-
-    function applyFilters(){
-      const prov = provinciaSel.value;
-      const cant = cantonSel.value;
-      const plan = planSel.value;
-      const q = normStr(qInput.value).toLowerCase();
-
-      filteredFeatures = allFeatures.filter(f => {
-        const props = f.properties || {};
-        const p = safeUpper(props[F.PROV]);
-        const c = safeUpper(props[F.CANT]);
-        const pl = normStr(props[F.PLAN]);
-
-        if(prov && p !== prov) return false;
-        if(cant && c !== cant) return false;
-        if(plan && pl !== plan) return false;
-
-        if(q){
-          const ci = normStr(props[F.CI]).toLowerCase();
-          const nom = normStr(props[F.NOMBRE]).toLowerCase();
-          if(!ci.includes(q) && !nom.includes(q)) return false;
-        }
-        return true;
-      });
-
-      // Actualiza stats
-      shownN.textContent = filteredFeatures.length.toLocaleString("es-EC");
-      sProv.textContent = prov || "(Todas)";
-      sCant.textContent = cant || "(Todos)";
-      sPlan.textContent = plan || "(Todas)";
-
-      // Si hay selección y ya no está en el filtro, limpia
-      if(selectedFeature){
-        const keep = filteredFeatures.some(ff => ff === selectedFeature);
-        if(!keep) clearSelection();
-      }
-
-      render();
-      buildLegend(true); // actualiza conteos
-    }
-
-    function clearFilters(){
-      provinciaSel.value = "";
-      planSel.value = "";
-      qInput.value = "";
-
-      rebuildCantons();
-      cantonSel.value = "";
-
-      filteredFeatures = allFeatures.slice();
-      shownN.textContent = filteredFeatures.length.toLocaleString("es-EC");
-      sProv.textContent = "(Todas)";
-      sCant.textContent = "(Todos)";
-      sPlan.textContent = "(Todas)";
-
-      clearSelection();
-      render();
-      buildLegend(true);
-    }
-
-    provinciaSel.addEventListener("change", () => {
-      rebuildCantons();
-      cantonSel.value = "";
+    let clusterGroup = L.markerClusterGroup({
+      chunkedLoading: true,
+      chunkInterval: 50,
+      chunkDelay: 25,
+      maxClusterRadius: 55,
+      showCoverageOnHover: false
     });
 
-    applyBtn.addEventListener("click", applyFilters);
-    clearBtn.addEventListener("click", clearFilters);
+    // Selection handling (so you can click same point again)
+    let selectedMarker = null;
+    let selectedLatLng = null;
 
-    // ========= Rendering =========
-    function render(){
+    /********************
+     * DATA
+     ********************/
+    let geojsonData = null;
+    let totalCount = 0;
+
+    // Colors automatic by PLANIFICAC
+    const planColor = new Map();
+    const palette = [
+      "#1f77b4","#ff7f0e","#2ca02c","#d62728","#9467bd","#8c564b","#e377c2",
+      "#7f7f7f","#bcbd22","#17becf","#4e79a7","#f28e2b","#e15759","#76b7b2",
+      "#59a14f","#edc949","#af7aa1","#9c755f","#bab0ab"
+    ];
+    let paletteIdx = 0;
+
+    function getColorByPlan(planVal) {
+      const key = norm(planVal);
+      if (!key) return "#2b8cbe";
+      if (!planColor.has(key)) {
+        planColor.set(key, palette[paletteIdx % palette.length]);
+        paletteIdx++;
+      }
+      return planColor.get(key);
+    }
+
+    function rebuildLegend() {
+      legendItems.innerHTML = "";
+      const entries = Array.from(planColor.entries()).sort((a,b) => a[0].localeCompare(b[0]));
+      if (entries.length === 0) {
+        const div = document.createElement("div");
+        div.style.fontSize = "12px";
+        div.style.color = "#666";
+        div.textContent = "—";
+        legendItems.appendChild(div);
+        return;
+      }
+      for (const [k, c] of entries) {
+        const row = document.createElement("div");
+        row.className = "lg-item";
+        row.innerHTML = `<span class="swatch" style="background:${c}"></span><span>${k}</span>`;
+        legendItems.appendChild(row);
+      }
+    }
+
+    /********************
+     * FILTER UI POPULATION
+     ********************/
+    function setOptions(selectEl, values, allLabel) {
+      const current = selectEl.value;
+      selectEl.innerHTML = "";
+      const optAll = document.createElement("option");
+      optAll.textContent = allLabel;
+      selectEl.appendChild(optAll);
+
+      values.forEach(v => {
+        const opt = document.createElement("option");
+        opt.value = v;
+        opt.textContent = v;
+        selectEl.appendChild(opt);
+      });
+
+      // try restore selection if still exists
+      const exists = Array.from(selectEl.options).some(o => o.value === current);
+      if (exists) selectEl.value = current;
+      else selectEl.selectedIndex = 0;
+    }
+
+    function populateFiltersFromData() {
+      const provSet = new Set();
+      const planSet = new Set();
+
+      geojsonData.features.forEach(f => {
+        const p = f.properties || {};
+        const prov = normUpper(p.PROVINCIA);
+        const plan = norm(p.PLANIFICAC);
+        if (prov) provSet.add(prov);
+        if (plan) planSet.add(plan);
+        // Pre-assign colors for legend stability
+        if (plan) getColorByPlan(plan);
+      });
+
+      setOptions(provinciaSelect, Array.from(provSet).sort(), "(Todas)");
+      setOptions(planSelect, Array.from(planSet).sort(), "(Todos)");
+
+      // canton starts disabled until province chosen
+      cantonSelect.disabled = true;
+      cantonSelect.innerHTML = '<option>(Todos)</option>';
+
+      rebuildLegend();
+    }
+
+    function updateCantonOptionsForProvince(selectedProv) {
+      const cantSet = new Set();
+      if (!selectedProv || selectedProv === "(Todas)") {
+        cantonSelect.disabled = true;
+        cantonSelect.innerHTML = '<option>(Todos)</option>';
+        return;
+      }
+      geojsonData.features.forEach(f => {
+        const p = f.properties || {};
+        const prov = normUpper(p.PROVINCIA);
+        const cant = normUpper(p.CANTON);
+        if (prov === selectedProv && cant) cantSet.add(cant);
+      });
+      const cants = Array.from(cantSet).sort();
+      setOptions(cantonSelect, cants, "(Todos)");
+      cantonSelect.disabled = false;
+    }
+
+    /********************
+     * DETAIL PANEL
+     ********************/
+    function showDetails(props, latlng) {
+      // Only show: CI, NOMBRE, PROVINCIA, CANTON, PARROQUIA, PLANIFICAC
+      d_nombre.textContent = norm(props.NOMBRE) || "—";
+      d_ci.textContent = norm(props.CI) || "—";
+      d_prov.textContent = norm(props.PROVINCIA) || "—";
+      d_cant.textContent = norm(props.CANTON) || "—";
+      d_parr.textContent = norm(props.PARROQUIA) || "—";
+      d_plan.textContent = norm(props.PLANIFICAC) || "—";
+
+      selectedLatLng = latlng;
+
+      // show panel
+      detailPanel.classList.remove("hidden");
+    }
+
+    function clearSelection() {
+      selectedMarker = null;
+      selectedLatLng = null;
+      detailPanel.classList.add("hidden");
+    }
+
+    btnCentrar.addEventListener("click", () => {
+      if (!selectedLatLng) return;
+      map.setView(selectedLatLng, Math.max(map.getZoom(), 12));
+    });
+
+    btnQuitar.addEventListener("click", clearSelection);
+
+    /********************
+     * DRAW + FILTER (AUTO) + AUTO ZOOM
+     ********************/
+    function applyFiltersAndZoom({ zoom = true } = {}) {
+      if (!geojsonData) return;
+
+      const prov = provinciaSelect.value;
+      const cant = cantonSelect.value;
+      const plan = planSelect.value;
+      const q = norm(searchInput.value).toLowerCase();
+
+      // clear existing
       pointsLayer.clearLayers();
+      if (clusterGroup) clusterGroup.clearLayers();
 
-      // Render con circleMarker para velocidad
-      for(const f of filteredFeatures){
-        const props = f.properties || {};
-        const pl = normStr(props[F.PLAN]);
-        const col = planColor.get(pl) || "#2563eb";
+      const keptMarkers = [];
 
-        // Leaflet: GeoJSON coords = [lng, lat]
-        const coords = f.geometry.coordinates;
-        const lat = coords[1];
-        const lng = coords[0];
+      let shown = 0;
 
-        const layer = L.circleMarker([lat, lng], {
+      geojsonData.features.forEach(f => {
+        const p = f.properties || {};
+        const g = f.geometry || {};
+        if (!g.coordinates || g.type !== "Point") return;
+
+        const fProv = normUpper(p.PROVINCIA);
+        const fCant = normUpper(p.CANTON);
+        const fPlan = norm(p.PLANIFICAC);
+
+        if (prov !== "(Todas)" && fProv !== normUpper(prov)) return;
+        if (cant !== "(Todos)" && fCant !== normUpper(cant)) return;
+        if (plan !== "(Todos)" && fPlan !== plan) return;
+
+        if (q) {
+          const haystack = [
+            p.CI, p.NOMBRE, p.PROVINCIA, p.CANTON, p.PARROQUIA, p.PLANIFICAC
+          ].filter(Boolean).join(" ").toLowerCase();
+          if (!haystack.includes(q)) return;
+        }
+
+        const [lng, lat] = g.coordinates;
+        if (typeof lat !== "number" || typeof lng !== "number") return;
+
+        const color = getColorByPlan(fPlan);
+
+        const marker = L.circleMarker([lat, lng], {
           radius: 6,
           weight: 1,
-          color: "rgba(0,0,0,.25)",
-          fillColor: col,
+          color,
+          fillColor: color,
           fillOpacity: 0.9
         });
 
-        layer.on("click", () => {
-          selectFeature(f, layer);
+        marker.on("click", () => {
+          // Allow re-click on previously clicked markers:
+          selectedMarker = marker;
+          showDetails(p, marker.getLatLng());
         });
 
-        pointsLayer.addLayer(layer);
+        keptMarkers.push(marker);
+        shown++;
+
+        if (useClusterChk.checked) {
+          clusterGroup.addLayer(marker);
+        } else {
+          marker.addTo(pointsLayer);
+        }
+      });
+
+      // add cluster layer if enabled
+      if (useClusterChk.checked) {
+        if (!map.hasLayer(clusterGroup)) map.addLayer(clusterGroup);
+      } else {
+        if (map.hasLayer(clusterGroup)) map.removeLayer(clusterGroup);
       }
 
-      shownN.textContent = filteredFeatures.length.toLocaleString("es-EC");
-      if(filteredFeatures.length && !selectedFeature){
-        // zoom suave al conjunto (opcional). Lo dejamos sin auto-zoom para evitar saltos.
-      }
-    }
+      // Update stats
+      statsEl.innerHTML =
+        `Total: ${totalCount.toLocaleString()}<br/>` +
+        `Mostrando: ${shown.toLocaleString()}<br/>` +
+        `Provincia: ${prov}<br/>` +
+        `Cantón: ${cant}<br/>` +
+        `Planificación: ${plan}<br/>` +
+        `Búsqueda: ${q ? q : "(Ninguna)"}`;
 
-    // ========= Legend =========
-    function buildLegend(updateCounts=false){
-      if(planValues.length === 0){
-        legendBox.style.display = "none";
+      // Auto-zoom
+      if (!zoom) return;
+
+      if (keptMarkers.length === 0) {
+        map.setView(initialCenter, initialZoom);
         return;
       }
 
-      // Conteos por plan (sobre el filtro actual)
-      const counts = new Map();
-      if(updateCounts){
-        for(const f of filteredFeatures){
-          const pl = normStr(f.properties?.[F.PLAN]);
-          if(!pl) continue;
-          counts.set(pl, (counts.get(pl) || 0) + 1);
-        }
+      if (keptMarkers.length === 1) {
+        map.setView(keptMarkers[0].getLatLng(), Math.min(FIT_MAX_ZOOM, 13));
+        return;
       }
 
-      legendItems.innerHTML = "";
-
-      // Muestra solo las categorías existentes; si hay filtro, igual muestra todas con conteo (si quieres, puedo hacerlo “solo presentes”)
-      for(const pl of planValues){
-        const row = document.createElement("div");
-        row.className = "legend-item";
-
-        const sw = document.createElement("span");
-        sw.className = "swatch";
-        sw.style.background = planColor.get(pl) || "#2563eb";
-
-        const name = document.createElement("span");
-        name.className = "name";
-        name.title = pl;
-        name.textContent = pl;
-
-        const cnt = document.createElement("span");
-        cnt.className = "count";
-        cnt.textContent = updateCounts ? String(counts.get(pl) || 0) : "";
-
-        row.appendChild(sw);
-        row.appendChild(name);
-        row.appendChild(cnt);
-
-        legendItems.appendChild(row);
-      }
-
-      legendBox.style.display = "block";
+      const bounds = L.featureGroup(keptMarkers).getBounds();
+      map.fitBounds(bounds.pad(0.20), { maxZoom: FIT_MAX_ZOOM });
     }
 
-    // ========= Detail panel (no popup) =========
-    function selectFeature(f, layer){
-      selectedFeature = f;
-      selectedLayer = layer;
+    const applyLive = debounce(() => applyFiltersAndZoom({ zoom: true }), 250);
 
-      // Resalta visualmente
-      // (como circleMarker, ajustamos radio/contorno)
-      layer.setStyle({
-        radius: 9,
-        weight: 2,
-        color: "rgba(0,0,0,.55)"
-      });
+    /********************
+     * EVENTS (AUTO FILTER)
+     ********************/
+    provinciaSelect.addEventListener("change", () => {
+      updateCantonOptionsForProvince(provinciaSelect.value);
 
-      // Si había un seleccionado anterior, lo “desresaltamos”
-      for(const l of pointsLayer.getLayers()){
-        if(l !== layer){
-          // Reestablece estilo base
-          const props = getPropsFromLayer(l);
-          // (No tenemos props directo; así que lo dejamos sin “recalcular”. Mejor: al seleccionar, renderizamos todo de nuevo con estado seleccionado)
-        }
-      }
-      // En vez de tratar de revertir uno por uno, hacemos render() y luego re-aplicamos resaltado al actual:
-      render();
-      // Buscamos el layer correspondiente y lo resaltamos
-      // (Como re-renderiza, necesitamos encontrarlo por coordenada)
-      const coords = f.geometry.coordinates;
-      const lat = coords[1], lng = coords[0];
-      for(const l of pointsLayer.getLayers()){
-        const ll = l.getLatLng();
-        if(Math.abs(ll.lat - lat) < 1e-10 && Math.abs(ll.lng - lng) < 1e-10){
-          selectedLayer = l;
-          l.setStyle({ radius: 9, weight: 2, color: "rgba(0,0,0,.55)" });
-          break;
-        }
-      }
+      // If province changed, reset canton to "(Todos)"
+      if (cantonSelect.value !== "(Todos)") cantonSelect.value = "(Todos)";
 
-      const p = f.properties || {};
-
-      // Solo las columnas solicitadas
-      const rows = [
-        ["CI", p[F.CI]],
-        ["NOMBRE", p[F.NOMBRE]],
-        ["PROVINCIA", p[F.PROV]],
-        ["CANTÓN", p[F.CANT]],
-        ["PARROQUIA", p[F.PARROQ]],
-        [PLAN_LABEL, p[F.PLAN]],
-      ];
-
-      detailBody.className = "";
-      detailBody.innerHTML = `
-        <div class="kv">
-          ${rows.map(([k,v]) => `
-            <div class="k">${escapeHtml(k)}:</div>
-            <div class="v">${escapeHtml(normStr(v) || "—")}</div>
-          `).join("")}
-        </div>
-      `;
-
-      centerBtn.disabled = false;
-      clearSelBtn.disabled = false;
-    }
-
-    function clearSelection(){
-      selectedFeature = null;
-      selectedLayer = null;
-      detailBody.className = "empty";
-      detailBody.textContent = "Selecciona un punto en el mapa para ver su información.";
-      centerBtn.disabled = true;
-      clearSelBtn.disabled = true;
-      render();
-    }
-
-    centerBtn.addEventListener("click", () => {
-      if(!selectedFeature) return;
-      const coords = selectedFeature.geometry.coordinates;
-      const lat = coords[1], lng = coords[0];
-      map.setView([lat, lng], Math.max(map.getZoom(), 14), { animate: true });
+      applyLive();
     });
 
-    clearSelBtn.addEventListener("click", clearSelection);
+    cantonSelect.addEventListener("change", applyLive);
+    planSelect.addEventListener("change", applyLive);
+    searchInput.addEventListener("input", applyLive);
 
-    // ========= Utils =========
-    function escapeHtml(str){
-      return String(str)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
+    useClusterChk.addEventListener("change", () => {
+      // re-render but keep zoom
+      applyFiltersAndZoom({ zoom: false });
+    });
 
-    // Placeholder (no usamos en esta versión)
-    function getPropsFromLayer(){ return null; }
+    clearBtn.addEventListener("click", () => {
+      provinciaSelect.value = "(Todas)";
+      planSelect.value = "(Todos)";
+      searchInput.value = "";
+
+      cantonSelect.disabled = true;
+      cantonSelect.innerHTML = '<option>(Todos)</option>';
+
+      clearSelection();
+      applyFiltersAndZoom({ zoom: false });
+      map.setView(initialCenter, initialZoom);
+    });
+
+    // Optional: clear selection when clicking blank map
+    map.on("click", () => {
+      // Do not force-close if user wants persistent detail; you can comment out if desired.
+      // clearSelection();
+    });
+
+    /********************
+     * LOAD DATA
+     ********************/
+    fetch(GEOJSON_FILE)
+      .then(r => {
+        if (!r.ok) throw new Error("No se pudo cargar " + GEOJSON_FILE);
+        return r.json();
+      })
+      .then(data => {
+        geojsonData = data;
+        totalCount = (geojsonData.features || []).length;
+
+        // Show update date (today)
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth()+1).padStart(2,"0");
+        const dd = String(now.getDate()).padStart(2,"0");
+        fechaEl.textContent = `${yyyy}-${mm}-${dd}`;
+
+        populateFiltersFromData();
+        applyFiltersAndZoom({ zoom: false });
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Error cargando el GeoJSON. Revisa que el archivo exista en el repositorio y que el nombre coincida.");
+      });
   </script>
 </body>
 </html>
+
