@@ -52,7 +52,8 @@
       margin-bottom: 10px;
     }
 .brand img{
-  width: 190px;   /* prueba 180–220 según te guste */
+  width: 230px;   /* prueba 180–220 según te guste */
+  max-width: 100%;
   height: auto;
   object-fit: contain;
 }
@@ -196,6 +197,45 @@
       .app{ grid-template-columns: 340px 1fr; grid-template-rows: 1fr 360px; }
       .detail{ grid-column: 1 / -1; grid-row: 2; border-left: none; border-top: 1px solid var(--border); }
     }
+        /* 📱 Mejoras para teléfono */
+    @media (max-width: 720px){
+      .app{
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 55vh auto; /* panel arriba, mapa centro, detalle abajo */
+      }
+
+      .panel{
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 14px;
+        max-height: 42vh;   /* evita que el panel se coma el mapa */
+      }
+
+      #map{
+        min-height: 55vh;
+      }
+
+      .detail{
+        grid-column: 1 / -1;
+        grid-row: 3;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        padding: 14px;
+      }
+
+      /* controles de zoom más cómodos en móvil */
+      .leaflet-control-zoom{
+        margin-top: 12px !important;
+        margin-left: 10px !important;
+      }
+
+      /* inputs un poco más cómodos */
+      select, input[type="text"]{
+        padding: 12px 12px;
+        font-size: 14px;
+      }
+    }
+
   </style>
 </head>
 
@@ -648,6 +688,7 @@ fetch(GEOJSON_FILE)
 </script>
 </body>
 </html>
+
 
 
 
